@@ -1,25 +1,39 @@
 #!/usr/bin/python
 
 import sqlite3 as lite
+import sys
 
+con = None
 
-con = lite.connect('test.db')
-
-cars = (
-    (1, 'Audi', 52642),
-    (2, 'Mercedes', 57127),
-    (3, 'Skoda', 9000),
-    (4, 'Volvo', 29000),
-    (5, 'Bentley', 350000),
-    (6, 'Citroen', 21000),
-    (7, 'Hummer', 41400),
-    (8, 'Volkswagen', 21600),
-)
-
-with con:
+try:
+    con = lite.connect('test.db')
 
     cur = con.cursor()
 
-    cur.execute("DROP TABLE IF EXISTS Cars")
-    cur.execute('CREATE TABLE Cars(Id INT, Name TEXT, Price INT)')
-    cur.executemany('INSERT INTO Cars VALUES(?, ?, ?)', cars)
+    cur.executescript("""
+        DROP TABLE IF EXISTS Cars;
+        CREATE TABLE Cars(Id INT, Name TEXT, Price INT);
+        INSERT INTO Cars VALUES(1, 'Audi', 52642);
+        INSERT INTO Cars VALUES(2, 'Mercedes', 57127);
+        INSERT INTO Cars VALUES(3, 'Skoda', 9000);
+        INSERT INTO Cars VALUES(4, 'Volvo', 29000);
+        INSERT INTO Cars VALUES(5, 'Bentley', 350000);
+        INSERT INTO Cars VALUES(6, 'Citroen', 21000);
+        INSERT INTO Cars VALUES(7, 'Hummer', 41400);
+        INSERT INTO Cars VALUES(8, 'Volkswagen', 21600);
+        """)
+
+    con.commit()
+
+except lite.Error as e:
+
+    if con:
+        con.rollback()
+
+    print("Error: %s" % e)
+    sys.exit(1)
+
+finally:
+
+    if con:
+        con.close()
